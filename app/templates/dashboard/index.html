@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Executive Financial Dashboard{% endblock %}
+
+{% block content %}
+<!-- Welcome & Period Banner -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+  <div>
+    <h2 class="h4 fw-bold mb-1 text-dark">Hello, {{ current_user.username }} 👋</h2>
+    <p class="text-muted small mb-0">Financial analytics and predictions for {{ today.strftime('%B %Y') }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('forecasting.index') }}" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1">
+      <i class="bi bi-cpu"></i> View AI Forecast
+    </a>
+    <a href="{{ url_for('transactions.add') }}" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm">
+      <i class="bi bi-plus-lg"></i> Add Transaction
+    </a>
+  </div>
+</div>
+
+<!-- 6 Executive Summary Metric Cards -->
+<div class="row g-3 mb-4">
+  <!-- 1. Total Income -->
+  <div class="col-sm-6 col-xl-2">
+    <div class="metric-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="metric-label">Income</div>
+          <div class="metric-value text-success">{{ total_income|currency }}</div>
+        </div>
+        <div class="metric-card-icon icon-income">
+          <i class="bi bi-arrow-down-left"></i>
+        </div>
+      </div>
+      <div class="metric-subtext text-muted">This month</div>
+    </div>
+  </div>
+
+  <!-- 2. Total Expenses -->
+  <div class="col-sm-6 col-xl-2">
+    <div class="metric-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="metric-label">Expenses</div>
+          <div class="metric-value text-danger">{{ total_expenses|currency }}</div>
+        </div>
+        <div class="metric-card-icon icon-expense">
+          <i class="bi bi-arrow-up-right"></i>
+        </div>
+      </div>
+      <div class="metric-subtext text-muted">Realized spend</div>
+    </div>
+  </div>
+
+  <!-- 3. Net Balance -->
+  <div class="col-sm-6 col-xl-2">
+    <div class="metric-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="metric-label">Net Balance</div>
+          <div class="metric-value {% if balance >= 0 %}text-primary{% else %}text-danger{% endif %}">
+            {{ balance|currency }}
+          </div>
+        </div>
+        <div class="metric-card-icon icon-balance">
+          <i class="bi bi-wallet2"></i>
+        </div>
+      </div>
+      <div class="metric-subtext text-muted">Income − Expenses</div>
+    </div>
+  </div>
+
+  <!-- 4. Savings Rate -->
+  <div class="col-sm-6 col-xl-2">
+    <div class="metric-card" title="Simplified cash-flow calculation: ((Income - Expenses) / Income) * 100">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="metric-label">Savings Rate</div>
+          <div class="metric-value {% if savings_rate >= 20 %}text-success{% elif savings_rate > 0 %}text-warning{% else %}text-danger{% endif %}">
+            {{ savings_rate }}%
+          </div>
+        </div>
+        <div class="metric-card-icon icon-savings">
+          <i class="bi bi-piggy-bank"></i>
+        </div>
+      </div>
+      <div class="metric-subtext text-muted">Cash-flow metric</div>
+    </div>
+  </div>
+
+  <!-- 5. Monthly Budget Utilization -->
+  <div class="col-sm-6 col-xl-2">
+    <div class="metric-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="metric-label">Budget Use</div>
+          <div class="metric-value {% if budget_utilization and budget_utilization > 100 %}text-danger{% elif budget_utilization and budget_utilization >= 80 %}text-warning{% else %}text-info{% endif %}">
+            {% if budget_utilization != none %}{{ budget_utilization }}%{% else %}N/A{% endif %}
+          </div>
+        </div>
+        <div class="metric-card-icon icon-budget">
+          <i class="bi bi-pie-chart"></i>
+        </div>
+      </div>
+      <div class="metric-subtext text-muted">
+        {% if budget_limit %}{{ budget_remaining|currency }} remaining{% else %}No overall limit set{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Predicted Month-End Spend -->
+  <div class="col-sm-6 col-xl-2">
+    <div class="metric-card border-primary-subtle">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="metric-label text-primary">Predicted End</div>
+          <div class="metric-value text-primary">{{ forecast.predicted_month_end_total|currency }}</div>
+        </div>
+        <div class="metric-card-icon icon-forecast">
+          <i class="bi bi-cpu"></i>
+        </div>
+      </div>
+      <div class="metric-subtext text-truncate">
+        {% if forecast.is_ml %}
+        <span class="badge bg-primary-subtle text-primary" style="font-size: 0.7rem;">ML Model</span>
+        {% else %}
+        <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.7rem;">Baseline Avg</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Grid: Row 1 -->
+<div class="row g-4 mb-4">
+  <!-- Daily Spending Trend Line Chart -->
+  <div class="col-lg-8">
+    <div class="dashboard-card h-100 mb-0">
+      <div class="dashboard-card-header">
+        <h3 class="dashboard-card-title">
+          <i class="bi bi-graph-up text-primary"></i>
+          Daily Spending Trend ({{ today.strftime('%B %Y') }})
+        </h3>
+        <span class="badge bg-light text-muted border">Daily Realized</span>
+      </div>
+      <div class="dashboard-card-body">
+        <div style="height: 300px; position: relative;">
+          <canvas id="dailyTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense Breakdown Doughnut Chart -->
+  <div class="col-lg-4">
+    <div class="dashboard-card h-100 mb-0">
+      <div class="dashboard-card-header">
+        <h3 class="dashboard-card-title">
+          <i class="bi bi-pie-chart-fill text-warning"></i>
+          Category Breakdown
+        </h3>
+        <a href="{{ url_for('analytics.index') }}" class="small text-decoration-none">Details &rarr;</a>
+      </div>
+      <div class="dashboard-card-body">
+        {% if cat_breakdown.categories %}
+        <div style="height: 280px; position: relative;">
+          <canvas id="categoryDoughnutChart"></canvas>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-folder2-open display-4 d-block mb-2 text-secondary"></i>
+          <p class="mb-0">No expense records logged for this month yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Grid: Row 2 -->
+<div class="row g-4 mb-4">
+  <!-- Monthly Comparison Bar Chart -->
+  <div class="col-lg-6">
+    <div class="dashboard-card h-100 mb-0">
+      <div class="dashboard-card-header">
+        <h3 class="dashboard-card-title">
+          <i class="bi bi-bar-chart-line text-success"></i>
+          Income vs Expenses (6-Month Trend)
+        </h3>
+      </div>
+      <div class="dashboard-card-body">
+        <div style="height: 280px; position: relative;">
+          <canvas id="monthlyComparisonChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget vs Actual Spending -->
+  <div class="col-lg-6">
+    <div class="dashboard-card h-100 mb-0">
+      <div class="dashboard-card-header">
+        <h3 class="dashboard-card-title">
+          <i class="bi bi-bullseye text-info"></i>
+          Budget vs Actual Spending
+        </h3>
+        <a href="{{ url_for('budgets.index') }}" class="small text-decoration-none">Manage &rarr;</a>
+      </div>
+      <div class="dashboard-card-body">
+        <div style="height: 280px; position: relative;">
+          <canvas id="budgetVsActualChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Transactions Table -->
+<div class="dashboard-card">
+  <div class="dashboard-card-header">
+    <h3 class="dashboard-card-title">
+      <i class="bi bi-clock-history text-secondary"></i>
+      Recent Transactions
+    </h3>
+    <a href="{{ url_for('transactions.index') }}" class="btn btn-outline-secondary btn-sm">
+      View All ({{ recent_transactions|length }}) &rarr;
+    </a>
+  </div>
+  <div class="dashboard-card-body p-0">
+    {% if recent_transactions %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Date</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Method</th>
+            <th class="text-end pe-4">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in recent_transactions %}
+          <tr>
+            <td class="ps-4 text-nowrap text-muted small">{{ t.transaction_date.strftime('%b %d, %Y') }}</td>
+            <td>
+              {% if t.type == 'income' %}
+              <span class="badge badge-income"><i class="bi bi-arrow-down-left me-1"></i>Income</span>
+              {% else %}
+              <span class="badge badge-expense"><i class="bi bi-arrow-up-right me-1"></i>Expense</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="d-inline-flex align-items-center gap-2">
+                <span class="badge rounded-pill" style="background-color: {{ t.category.color }}; width: 10px; height: 10px; padding: 0;"></span>
+                <span class="fw-medium">{{ t.category.name }}</span>
+              </span>
+            </td>
+            <td class="text-truncate" style="max-width: 240px;">{{ t.description or '—' }}</td>
+            <td class="text-muted small">{{ t.payment_method }}</td>
+            <td class="text-end pe-4 fw-bold {% if t.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+              {% if t.type == 'income' %}+{% else %}-{% endif %}{{ t.amount|currency }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-receipt display-4 text-muted d-block mb-3"></i>
+      <h5 class="fw-semibold text-dark">No Transactions Found</h5>
+      <p class="text-muted small mb-3">Record your first transaction to unlock interactive charts and ML predictions.</p>
+      <a href="{{ url_for('transactions.add') }}" class="btn btn-primary btn-sm shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Add Transaction Now
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    initDashboardCharts();
+  });
+</script>
+{% endblock %}

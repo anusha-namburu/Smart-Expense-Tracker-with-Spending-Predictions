@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile Settings{% endblock %}
+{% block page_title %}Profile & Settings{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title"><i class="bi bi-person-gear text-primary"></i>Account Preferences</h2>
+      </div>
+      <div class="dashboard-card-body">
+        <form method="POST" action="{{ url_for('auth.profile') }}">
+          {{ profile_form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label text-muted small fw-medium">Email Address</label>
+            <input type="text" class="form-control" value="{{ current_user.email }}" disabled readonly>
+            <div class="form-text">Your email address is your unique account identifier.</div>
+          </div>
+
+          <div class="mb-3">
+            {{ profile_form.username.label(class="form-label text-muted small fw-medium") }}
+            {{ profile_form.username(class="form-control" + (" is-invalid" if profile_form.username.errors else "")) }}
+            {% for err in profile_form.username.errors %}
+              <div class="invalid-feedback">{{ err }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-4">
+            {{ profile_form.currency.label(class="form-label text-muted small fw-medium") }}
+            {{ profile_form.currency(class="form-select" + (" is-invalid" if profile_form.currency.errors else "")) }}
+            {% for err in profile_form.currency.errors %}
+              <div class="invalid-feedback">{{ err }}</div>
+            {% endfor %}
+          </div>
+
+          <button type="submit" name="profile-submit" class="btn btn-primary px-4 shadow-sm">
+            <i class="bi bi-save me-1"></i> Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title"><i class="bi bi-shield-lock text-warning"></i>Security & Password</h2>
+      </div>
+      <div class="dashboard-card-body">
+        <form method="POST" action="{{ url_for('auth.profile') }}">
+          {{ password_form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ password_form.old_password.label(class="form-label text-muted small fw-medium") }}
+            {{ password_form.old_password(class="form-control" + (" is-invalid" if password_form.old_password.errors else ""), placeholder="••••••••") }}
+            {% for err in password_form.old_password.errors %}
+              <div class="invalid-feedback">{{ err }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-3">
+            {{ password_form.new_password.label(class="form-label text-muted small fw-medium") }}
+            {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else ""), placeholder="Minimum 8 characters") }}
+            {% for err in password_form.new_password.errors %}
+              <div class="invalid-feedback">{{ err }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="mb-4">
+            {{ password_form.confirm_new_password.label(class="form-label text-muted small fw-medium") }}
+            {{ password_form.confirm_new_password(class="form-control" + (" is-invalid" if password_form.confirm_new_password.errors else ""), placeholder="Repeat new password") }}
+            {% for err in password_form.confirm_new_password.errors %}
+              <div class="invalid-feedback">{{ err }}</div>
+            {% endfor %}
+          </div>
+
+          <button type="submit" name="password-submit" class="btn btn-warning px-4 shadow-sm text-dark">
+            <i class="bi bi-key me-1"></i> Update Password
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account{% endblock %}
+
+{% block public_content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-7 col-lg-6">
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-sm-5 bg-white">
+      <div class="text-center mb-4">
+        <div class="metric-card-icon icon-balance mx-auto mb-3">
+          <i class="bi bi-person-plus"></i>
+        </div>
+        <h2 class="h4 fw-bold mb-1">Create Your Account</h2>
+        <p class="text-muted small">Start tracking finances and forecasting spending with AI</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          {{ form.username.label(class="form-label fw-medium small") }}
+          {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), placeholder="Jane Doe") }}
+          {% for error in form.username.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          {{ form.email.label(class="form-label fw-medium small") }}
+          {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="jane@example.com") }}
+          {% for error in form.email.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          {{ form.currency.label(class="form-label fw-medium small") }}
+          {{ form.currency(class="form-select" + (" is-invalid" if form.currency.errors else "")) }}
+          {% for error in form.currency.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="row">
+          <div class="col-sm-6 mb-3">
+            {{ form.password.label(class="form-label fw-medium small") }}
+            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Min 8 characters") }}
+            {% for error in form.password.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-sm-6 mb-3">
+            {{ form.confirm_password.label(class="form-label fw-medium small") }}
+            {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Repeat password") }}
+            {% for error in form.confirm_password.errors %}
+              <div class="invalid-feedback">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-medium shadow-sm mt-2">
+          <i class="bi bi-check2-circle me-1"></i> Register & Set Up Tracker
+        </button>
+      </form>
+
+      <div class="text-center mt-4 pt-3 border-top">
+        <p class="text-muted small mb-0">
+          Already registered? <a href="{{ url_for('auth.login') }}" class="text-primary fw-semibold text-decoration-none">Sign In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

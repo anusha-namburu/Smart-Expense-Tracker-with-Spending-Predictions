@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}404 - Page Not Found{% endblock %}
+{% block page_title %}Page Not Found{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+  <div class="col-md-6 text-center">
+    <div class="display-1 fw-bold text-primary mb-2">404</div>
+    <h2 class="h4 fw-bold text-dark mb-3">Resource Not Found</h2>
+    <p class="text-muted mb-4">
+      {{ message or "The page or financial resource you are attempting to reach does not exist, or you do not have permission to view it." }}
+    </p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary px-4 shadow-sm">
+      <i class="bi bi-speedometer2 me-1"></i> Return to Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block public_content %}
+<div class="row justify-content-center py-5">
+  <div class="col-md-6 text-center">
+    <div class="display-1 fw-bold text-primary mb-2">404</div>
+    <h2 class="h4 fw-bold text-dark mb-3">Resource Not Found</h2>
+    <p class="text-muted mb-4">The requested page does not exist.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary px-4 shadow-sm">
+      <i class="bi bi-house me-1"></i> Go to Homepage
+    </a>
+  </div>
+</div>
+{% endblock %}

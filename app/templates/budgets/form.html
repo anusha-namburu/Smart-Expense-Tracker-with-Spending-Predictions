@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h2 class="dashboard-card-title">
+          <i class="bi bi-pie-chart text-primary"></i>
+          {{ title }}
+        </h2>
+        <a href="{{ url_for('budgets.index') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i> Back to Budgets
+        </a>
+      </div>
+      <div class="dashboard-card-body">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            {{ form.category_id.label(class="form-label text-muted small fw-medium") }}
+            {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
+            {% for err in form.category_id.errors %}
+              <div class="invalid-feedback">{{ err }}</div>
+            {% endfor %}
+            <div class="form-text">Choose 'Overall Monthly Budget' to track total expenses, or pick a specific category.</div>
+          </div>
+
+          <div class="mb-3">
+            {{ form.monthly_limit.label(class="form-label text-muted small fw-medium") }}
+            <div class="input-group">
+              <span class="input-group-text bg-light fw-bold">{{ current_user.currency }}</span>
+              {{ form.monthly_limit(class="form-control" + (" is-invalid" if form.monthly_limit.errors else ""), placeholder="500.00", step="1.00") }}
+            </div>
+            {% for err in form.monthly_limit.errors %}
+              <div class="invalid-feedback d-block">{{ err }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="row g-2 mb-4">
+            <div class="col-sm-6">
+              {{ form.month.label(class="form-label text-muted small fw-medium") }}
+              {{ form.month(class="form-select" + (" is-invalid" if form.month.errors else "")) }}
+              {% for err in form.month.errors %}
+                <div class="invalid-feedback">{{ err }}</div>
+              {% endfor %}
+            </div>
+            <div class="col-sm-6">
+              {{ form.year.label(class="form-label text-muted small fw-medium") }}
+              {{ form.year(class="form-select" + (" is-invalid" if form.year.errors else "")) }}
+              {% for err in form.year.errors %}
+                <div class="invalid-feedback">{{ err }}</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+            <a href="{{ url_for('budgets.index') }}" class="btn btn-light border btn-sm px-3">Cancel</a>
+            <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+              <i class="bi bi-check2 me-1"></i> Save Budget
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+﻿.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+instance/*.db
+instance/ml_models/
+.env
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/

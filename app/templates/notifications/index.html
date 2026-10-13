@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notification Center{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+  <div>
+    <h2 class="h4 fw-bold mb-1 text-dark">Notification Center</h2>
+    <p class="text-muted small mb-0">System alerts, budget threshold warnings, and savings milestones</p>
+  </div>
+  {% if unread_count > 0 %}
+  <form method="POST" action="{{ url_for('notifications.mark_all_read') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1 shadow-sm">
+      <i class="bi bi-check2-all"></i> Mark All as Read ({{ unread_count }})
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="dashboard-card">
+  <div class="dashboard-card-body p-0">
+    {% if notifications %}
+    <ul class="list-group list-group-flush rounded-3">
+      {% for n in notifications %}
+      <li class="list-group-item p-3 d-flex align-items-start gap-3 {% if not n.is_read %}bg-light bg-opacity-75 border-start border-4 border-primary{% endif %}">
+        <div class="metric-card-icon {% if n.type == 'budget_exceeded' %}icon-expense{% elif n.type == 'budget_warning' %}icon-savings{% elif n.type == 'goal_milestone' %}icon-income{% else %}icon-balance{% endif %} flex-shrink-0" style="width: 38px; height: 38px; font-size: 1.1rem;">
+          <i class="bi {% if n.type == 'budget_exceeded' %}bi-exclamation-octagon{% elif n.type == 'budget_warning' %}bi-exclamation-triangle{% elif n.type == 'goal_milestone' %}bi-trophy{% else %}bi-bell{% endif %}"></i>
+        </div>
+
+        <div class="flex-grow-1">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <h6 class="fw-bold mb-1 text-dark {% if not n.is_read %}fw-semibold{% endif %}">{{ n.title }}</h6>
+            <span class="text-muted small">{{ n.created_at.strftime('%b %d, %H:%M') }}</span>
+          </div>
+          <p class="text-muted small mb-2">{{ n.message }}</p>
+
+          <div class="d-flex gap-2 align-items-center">
+            {% if not n.is_read %}
+            <form method="POST" action="{{ url_for('notifications.mark_read', id=n.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-link p-0 text-primary small text-decoration-none" style="font-size: 0.8rem;">
+                <i class="bi bi-check2 me-1"></i>Mark read
+              </button>
+            </form>
+            <span class="text-muted" style="font-size: 0.75rem;">•</span>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('notifications.delete', id=n.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-link p-0 text-secondary small text-decoration-none" style="font-size: 0.8rem;">
+                <i class="bi bi-x-circle me-1"></i>Dismiss
+              </button>
+            </form>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-bell-slash display-4 d-block mb-3 text-secondary"></i>
+      <h5 class="fw-semibold text-dark">No Notifications</h5>
+      <p class="small mb-0">You're completely caught up! We will notify you when spending thresholds are reached.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

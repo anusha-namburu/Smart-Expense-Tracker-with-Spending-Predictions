@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}500 - Internal Server Error{% endblock %}
+{% block page_title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+  <div class="col-md-6 text-center">
+    <div class="display-1 fw-bold text-danger mb-2">500</div>
+    <h2 class="h4 fw-bold text-dark mb-3">Internal Server Error</h2>
+    <p class="text-muted mb-4">
+      An unexpected internal server error occurred. Any in-progress database changes have been rolled back safely to protect financial integrity.
+    </p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary px-4 shadow-sm">
+      <i class="bi bi-speedometer2 me-1"></i> Return to Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block public_content %}
+<div class="row justify-content-center py-5">
+  <div class="col-md-6 text-center">
+    <div class="display-1 fw-bold text-danger mb-2">500</div>
+    <h2 class="h4 fw-bold text-dark mb-3">Server Error</h2>
+    <p class="text-muted mb-4">An unexpected error occurred. Please try again shortly.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary px-4 shadow-sm">
+      <i class="bi bi-house me-1"></i> Back to Home
+    </a>
+  </div>
+</div>
+{% endblock %}
