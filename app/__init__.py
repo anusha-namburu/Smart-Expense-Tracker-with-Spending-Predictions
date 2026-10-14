@@ -30,7 +30,6 @@ def create_app(config_name=None):
     from app.budgets.routes import budgets_bp
     from app.forecasting.routes import forecasting_bp
     from app.analytics.routes import analytics_bp
-    from app.goals.routes import goals_bp
     from app.notifications.routes import notifications_bp
     from app.errors.handlers import errors_bp
 
@@ -40,7 +39,6 @@ def create_app(config_name=None):
     app.register_blueprint(budgets_bp, url_prefix='/budgets')
     app.register_blueprint(forecasting_bp, url_prefix='/forecasting')
     app.register_blueprint(analytics_bp, url_prefix='/analytics')
-    app.register_blueprint(goals_bp, url_prefix='/goals')
     app.register_blueprint(notifications_bp, url_prefix='/notifications')
     app.register_blueprint(errors_bp)
 
