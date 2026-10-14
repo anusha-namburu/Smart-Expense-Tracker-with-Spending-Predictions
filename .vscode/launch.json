@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Smart Expense Tracker",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "jinja": true,
+            "justMyCode": true,
+            "serverReadyAction": {
+                "pattern": "Running on (http://\\S+)",
+                "uriFormat": "%s",
+                "action": "openExternally"
+            },
+            "env": {
+                "FLASK_ENV": "development"
+            }
+        }
+    ]
+}

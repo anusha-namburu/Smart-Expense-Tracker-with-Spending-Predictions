@@ -24,5 +24,15 @@ def init_db_command():
         print("Database schema and default categories initialized successfully.")
 
 if __name__ == '__main__':
+<<<<<<< HEAD
+=======
+    import webbrowser
+    import threading
+
+    # Open browser automatically after a short delay so server has started
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        threading.Timer(1.25, lambda: webbrowser.open('http://127.0.0.1:5000')).start()
+
+>>>>>>> ef49f68 (Add Smart Expense Tracker with Spending Predictions)
     app.run(host='127.0.0.1', port=5000, debug=True)
 

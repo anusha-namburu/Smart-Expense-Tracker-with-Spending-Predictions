@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Goals & Recurring Expenses{% endblock %}
+{% block page_title %}Financial Goals & Recurring Expenses{% endblock %}
+
+{% block content %}
+<!-- Section 1: Savings Goals -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+  <div>
+    <h2 class="h4 fw-bold mb-1 text-dark">Savings Goals</h2>
+    <p class="text-muted small mb-0">Track targets for emergency funds, major purchases, and investments</p>
+  </div>
+  <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#addGoalModal">
+    <i class="bi bi-plus-lg"></i> New Savings Goal
+  </button>
+</div>
+
+<div class="row g-3 mb-5">
+  {% if goals %}
+    {% for g in goals %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 border-0 shadow-sm rounded-3 p-4 bg-white position-relative">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h3 class="h6 fw-bold mb-1 text-dark">{{ g.title }}</h3>
+            <span class="text-muted small">Target: {{ g.target_date.strftime('%b %d, %Y') }}</span>
+          </div>
+          {% if g.status == 'completed' %}
+          <span class="badge bg-success-subtle text-success"><i class="bi bi-check-circle me-1"></i>Completed</span>
+          {% else %}
+          <span class="badge bg-primary-subtle text-primary">In Progress</span>
+          {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-baseline my-3">
+          <span class="fs-4 fw-bold text-dark">{{ g.current_amount|currency }}</span>
+          <span class="text-muted small">Target: {{ g.target_amount|currency }}</span>
+        </div>
+
+        <div class="progress mb-2" style="height: 10px;">
+          <div class="progress-bar {% if g.status == 'completed' %}bg-success{% else %}bg-primary{% endif %}"
+               role="progressbar"
+               style="width: {{ g.progress_pct }}%;">
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between text-muted small mb-3">
+          <span>{{ g.progress_pct }}% achieved</span>
+          <span>{{ g.remaining_float|currency }} left</span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+          <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#depositModal{{ g.id }}">
+            <i class="bi bi-cash-coin me-1"></i> Add Funds
+          </button>
+          <form method="POST" action="{{ url_for('goals.delete', id=g.id) }}" onsubmit="return confirm('Delete this savings goal?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deposit Modal for Goal -->
+    <div class="modal fade" id="depositModal{{ g.id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+          <form method="POST" action="{{ url_for('goals.deposit', id=g.id) }}">
+            {{ deposit_form.hidden_tag() }}
+            <div class="modal-header">
+              <h5 class="modal-title fs-6">Add Funds to {{ g.title }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label small fw-medium">Deposit Amount</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">{{ current_user.currency }}</span>
+                  <input type="number" step="0.01" min="0.01" name="deposit_amount" class="form-control" required placeholder="50.00">
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">Confirm Deposit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm p-5 text-center bg-white rounded-3">
+        <i class="bi bi-bullseye display-4 text-muted mb-3"></i>
+        <h5 class="fw-semibold text-dark">No Savings Goals Set</h5>
+        <p class="text-muted small mb-3">Create your first milestone to monitor progress and celebrate completions.</p>
+        <div>
+          <button type="button" class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#addGoalModal">
+            <i class="bi bi-plus-lg me-1"></i> Add Goal
+          </button>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Section 2: Recurring Expenses -->
+<div class="dashboard-card">
+  <div class="dashboard-card-header">
+    <div>
+      <h3 class="dashboard-card-title mb-0"><i class="bi bi-arrow-repeat text-primary"></i>Recurring Expense Templates</h3>
+      <p class="text-muted small mb-0">Idempotently generate recurring bills and subscriptions</p>
+    </div>
+    <div class="d-flex gap-2">
+      <form method="POST" action="{{ url_for('goals.process_due_recurring') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-success btn-sm d-flex align-items-center gap-1 shadow-sm">
+          <i class="bi bi-play-circle"></i> Process Due Items
+        </button>
+      </form>
+      <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#addRecurringModal">
+        <i class="bi bi-plus-lg"></i> Add Template
+      </button>
+    </div>
+  </div>
+  <div class="dashboard-card-body p-0">
+    {% if recurring_items %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Description</th>
+            <th>Category</th>
+            <th>Frequency</th>
+            <th>Method</th>
+            <th>Next Due</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recurring_items %}
+          <tr>
+            <td class="ps-4 fw-medium text-dark">{{ r.description }}</td>
+            <td>
+              <span class="d-inline-flex align-items-center gap-2">
+                <span class="badge rounded-pill" style="background-color: {{ r.category.color }}; width: 10px; height: 10px; padding: 0;"></span>
+                <span>{{ r.category.name }}</span>
+              </span>
+            </td>
+            <td><span class="badge bg-light text-dark border text-capitalize">{{ r.frequency }}</span></td>
+            <td class="text-muted small">{{ r.payment_method }}</td>
+            <td class="text-nowrap small text-muted">{{ r.next_due_date.strftime('%b %d, %Y') }}</td>
+            <td class="fw-bold text-danger">{{ r.amount|currency }}</td>
+            <td>
+              {% if r.is_active %}
+              <span class="badge bg-success-subtle text-success">Active</span>
+              {% else %}
+              <span class="badge bg-secondary-subtle text-secondary">Paused</span>
+              {% endif %}
+            </td>
+            <td class="text-end pe-4">
+              <div class="btn-group btn-group-sm">
+                <form method="POST" action="{{ url_for('goals.toggle_recurring', id=r.id) }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-light border" title="Toggle Active/Paused">
+                    <i class="bi {% if r.is_active %}bi-pause-circle text-warning{% else %}bi-play-circle text-success{% endif %}"></i>
+                  </button>
+                </form>
+                <form method="POST" action="{{ url_for('goals.delete_recurring', id=r.id) }}" class="d-inline" onsubmit="return confirm('Remove recurring template?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-light border text-danger" title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted small">
+      No recurring templates created yet. Add templates for recurring subscriptions like Netflix, Rent, or Internet.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal: Add Savings Goal -->
+<div class="modal fade" id="addGoalModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('goals.add') }}">
+        {{ goal_form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-bullseye text-primary me-2"></i>Create Savings Goal</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            {{ goal_form.title.label(class="form-label small fw-medium") }}
+            {{ goal_form.title(class="form-control", placeholder="e.g. Emergency Fund") }}
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-sm-6">
+              {{ goal_form.target_amount.label(class="form-label small fw-medium") }}
+              <div class="input-group">
+                <span class="input-group-text bg-light">{{ current_user.currency }}</span>
+                {{ goal_form.target_amount(class="form-control", placeholder="1000.00") }}
+              </div>
+            </div>
+            <div class="col-sm-6">
+              {{ goal_form.current_amount.label(class="form-label small fw-medium") }}
+              <div class="input-group">
+                <span class="input-group-text bg-light">{{ current_user.currency }}</span>
+                {{ goal_form.current_amount(class="form-control", placeholder="0.00") }}
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            {{ goal_form.target_date.label(class="form-label small fw-medium") }}
+            {{ goal_form.target_date(class="form-control") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Create Goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Recurring Template -->
+<div class="modal fade" id="addRecurringModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('goals.add_recurring') }}">
+        {{ recurring_form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-arrow-repeat text-primary me-2"></i>Add Recurring Expense Template</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            {{ recurring_form.description.label(class="form-label small fw-medium") }}
+            {{ recurring_form.description(class="form-control", placeholder="e.g. Internet Bill") }}
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-sm-6">
+              {{ recurring_form.amount.label(class="form-label small fw-medium") }}
+              <div class="input-group">
+                <span class="input-group-text bg-light">{{ current_user.currency }}</span>
+                {{ recurring_form.amount(class="form-control", placeholder="60.00") }}
+              </div>
+            </div>
+            <div class="col-sm-6">
+              {{ recurring_form.category_id.label(class="form-label small fw-medium") }}
+              {{ recurring_form.category_id(class="form-select") }}
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-sm-6">
+              {{ recurring_form.frequency.label(class="form-label small fw-medium") }}
+              {{ recurring_form.frequency(class="form-select") }}
+            </div>
+            <div class="col-sm-6">
+              {{ recurring_form.payment_method.label(class="form-label small fw-medium") }}
+              {{ recurring_form.payment_method(class="form-select") }}
+            </div>
+          </div>
+          <div class="mb-3">
+            {{ recurring_form.next_due_date.label(class="form-label small fw-medium") }}
+            {{ recurring_form.next_due_date(class="form-control") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Recurring Template</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
